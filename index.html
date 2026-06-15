@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>코인노래방 무인결제</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a24;
+      --surface2: #23232f;
+      --border: #2e2e3e;
+      --accent: #7c5cfc;
+      --accent-hover: #9370ff;
+      --accent-light: rgba(124, 92, 252, 0.15);
+      --text: #f1f1f5;
+      --text-muted: #8888aa;
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100dvh;
+      overscroll-behavior: none;
+    }
+
+    .hidden { display: none !important; }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 100px;
+    }
+
+    .app-header {
+      padding: 28px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .store-name { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .content { flex: 1; padding: 0 16px; }
+
+    .step { margin-top: 24px; animation: fadeIn 0.18s ease; }
+    .step-title {
+      font-size: 13px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .room-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+    .room-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 14px; font-weight: 600;
+      padding: 14px 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .room-btn:active { transform: scale(0.95); }
+    .room-btn.selected {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: #c5b3ff;
+    }
+
+    .mode-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .mode-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 15px; font-weight: 600;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mode-btn.active { background: var(--accent-light); border-color: var(--accent); color: #c5b3ff; }
+    .mode-btn.mode-btn-disabled { opacity: 0.25; cursor: not-allowed; }
+    .mode-only-notice { margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center; }
+
+    .quick-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+    .quick-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 14px; font-weight: 600;
+      padding: 12px 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .quick-btn.selected { background: var(--accent-light); border-color: var(--accent); color: #c5b3ff; }
+
+    .counter {
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+    }
+    .counter-btn {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      color: var(--text);
+      font-size: 20px;
+      width: 40px; height: 40px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .counter-btn:active { transform: scale(0.88); }
+    .counter-value { font-size: 32px; font-weight: 700; min-width: 48px; text-align: center; }
+    .counter-unit { font-size: 16px; color: var(--text-muted); }
+
+    .time-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .time-opt-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 18px 12px;
+      cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .time-opt-btn.selected { background: var(--accent-light); border-color: var(--accent); }
+    .opt-time { font-size: 18px; font-weight: 700; }
+    .opt-price { font-size: 13px; color: var(--text-muted); }
+    .time-opt-btn.selected .opt-price { color: #c5b3ff; }
+
+    .pay-bar {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      z-index: 100;
+      animation: slideUp 0.2s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateX(-50%) translateY(100%); }
+      to   { transform: translateX(-50%) translateY(0); }
+    }
+    .pay-info { display: flex; flex-direction: column; gap: 2px; }
+    .pay-detail { font-size: 13px; color: var(--text-muted); }
+    .pay-amount { font-size: 20px; font-weight: 700; }
+    .pay-button {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-size: 16px; font-weight: 700;
+      padding: 14px 28px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pay-button:hover { background: var(--accent-hover); }
+    .pay-button:active { transform: scale(0.97); }
+    .pay-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* 데모 모달 */
+    .demo-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200;
+      padding: 24px;
+    }
+    .demo-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      width: 100%; max-width: 360px;
+      text-align: center;
+    }
+    .demo-icon { font-size: 48px; margin-bottom: 16px; }
+    .demo-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .demo-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; }
+    .demo-info {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .demo-info-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; }
+    .demo-info-row .dl { color: var(--text-muted); }
+    .demo-info-row .dv { font-weight: 600; }
+    .demo-close {
+      width: 100%;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-size: 15px; font-weight: 700;
+      padding: 13px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1 class="store-name">코인노래방</h1>
+      <p class="subtitle">방을 선택하고 결제해주세요</p>
+    </header>
+
+    <main class="content">
+      <section class="step" id="step-room">
+        <h2 class="step-title">방 선택</h2>
+        <div class="room-grid" id="room-grid"></div>
+      </section>
+
+      <section class="step hidden" id="step-mode">
+        <h2 class="step-title">결제 방식</h2>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="btn-song" onclick="selectMode('song')">🎵 곡 단위</button>
+          <button class="mode-btn" id="btn-time" onclick="selectMode('time')">⏱ 시간 단위</button>
+        </div>
+        <p class="mode-only-notice hidden" id="mode-only-notice"></p>
+      </section>
+
+      <section class="step hidden" id="step-quantity">
+        <div id="song-selector">
+          <h2 class="step-title">곡 수 선택</h2>
+          <div id="song-free">
+            <div class="quick-buttons">
+              <button class="quick-btn" onclick="setQuickSong(1)">1곡</button>
+              <button class="quick-btn" onclick="setQuickSong(3)">3곡</button>
+              <button class="quick-btn" onclick="setQuickSong(5)">5곡</button>
+              <button class="quick-btn" onclick="setQuickSong(10)">10곡</button>
+            </div>
+            <div class="counter">
+              <button class="counter-btn" onclick="adjustSong(-1)">−</button>
+              <span class="counter-value" id="song-count">1</span>
+              <span class="counter-unit">곡</span>
+              <button class="counter-btn" onclick="adjustSong(1)">+</button>
+            </div>
+          </div>
+          <div id="song-preset" class="hidden">
+            <div class="time-options" id="song-preset-btns"></div>
+          </div>
+        </div>
+
+        <div id="time-selector" class="hidden">
+          <h2 class="step-title">시간 선택</h2>
+          <div class="time-options" id="time-option-btns"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="pay-bar hidden" id="pay-bar">
+      <div class="pay-info">
+        <span class="pay-detail" id="pay-detail">−</span>
+        <span class="pay-amount" id="pay-amount">0원</span>
+      </div>
+      <button class="pay-button" id="pay-button" onclick="startPayment()">결제하기</button>
+    </footer>
+  </div>
+
+  <!-- 데모 모달 -->
+  <div class="demo-overlay hidden" id="demo-overlay">
+    <div class="demo-modal">
+      <div class="demo-icon">💳</div>
+      <div class="demo-title">결제 화면 연동 지점</div>
+      <div class="demo-desc">실제 서비스에서는 이 시점에 토스페이먼츠 결제창이 열립니다.</div>
+      <div class="demo-info" id="demo-info"></div>
+      <button class="demo-close" onclick="closeDemo()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    const ROOMS = {
+      "1":  { name:"1번방",  modes:["time"],        song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "2":  { name:"2번방",  modes:["time"],        song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "3":  { name:"3번방",  modes:["time"],        song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "4":  { name:"4번방",  modes:["song","time"], song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "5":  { name:"5번방",  modes:["song","time"], song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "6":  { name:"6번방",  modes:["song","time"], song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "7":  { name:"7번방",  modes:["song","time"], song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "8":  { name:"8번방",  modes:["song","time"], song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "9":  { name:"9번방",  modes:["song","time"], song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "10": { name:"10번방", modes:["song","time"], song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "11": { name:"11번방", modes:["song","time"], song_price:500, song_options:null,      time_price_per_min:125, time_options:[10,20,30,60] },
+      "12": { name:"12번방", modes:["song","time"], song_price:500, song_options:[3,5,10],  time_price_per_min:125, time_options:[10,20,30,60] },
+      "13": { name:"13번방", modes:["song","time"], song_price:500, song_options:[3,5,10],  time_price_per_min:125, time_options:[10,20,30,60] },
+    };
+
+    let selectedRoom = null;
+    let selectedMode = "song";
+    let songCount = 1;
+    let selectedSong = null;
+    let selectedMinutes = null;
+
+    function init() {
+      const grid = document.getElementById("room-grid");
+      Object.entries(ROOMS).forEach(([id, room]) => {
+        const btn = document.createElement("button");
+        btn.className = "room-btn";
+        btn.dataset.id = id;
+        btn.textContent = room.name;
+        btn.onclick = () => selectRoom(id);
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectRoom(id) {
+      selectedRoom = id;
+      document.querySelectorAll(".room-btn").forEach(b => b.classList.remove("selected"));
+      document.querySelector(`.room-btn[data-id="${id}"]`).classList.add("selected");
+
+      const room = ROOMS[id];
+      const allowed = room.modes || ["song","time"];
+      const hasSong = allowed.includes("song");
+      const hasTime = allowed.includes("time");
+
+      const btnSong = document.getElementById("btn-song");
+      const btnTime = document.getElementById("btn-time");
+      const notice = document.getElementById("mode-only-notice");
+
+      btnSong.classList.toggle("mode-btn-disabled", !hasSong);
+      btnTime.classList.toggle("mode-btn-disabled", !hasTime);
+      btnSong.disabled = !hasSong;
+      btnTime.disabled = !hasTime;
+
+      if (allowed.length === 1) {
+        notice.textContent = allowed[0] === "song" ? "이 방은 곡 단위 결제만 가능합니다." : "이 방은 시간 단위 결제만 가능합니다.";
+        notice.classList.remove("hidden");
+        show("step-mode");
+        selectMode(allowed[0]);
+      } else {
+        notice.classList.add("hidden");
+        show("step-mode");
+        const nextMode = allowed.includes(selectedMode) ? selectedMode : allowed[0];
+        selectMode(nextMode);
+      }
+      updatePayBar();
+    }
+
+    function selectMode(mode) {
+      selectedMode = mode;
+      document.getElementById("btn-song").classList.toggle("active", mode === "song");
+      document.getElementById("btn-time").classList.toggle("active", mode === "time");
+      show("step-quantity");
+      if (mode === "song") {
+        show("song-selector"); hide("time-selector");
+        buildSongSelector();
+      } else {
+        hide("song-selector"); show("time-selector");
+        buildTimeOptions();
+        selectedMinutes = null;
+      }
+      updatePayBar();
+    }
+
+    function buildSongSelector() {
+      const room = ROOMS[selectedRoom];
+      const opts = room.song_options;
+      if (opts && opts.length > 0) {
+        hide("song-free"); show("song-preset");
+        selectedSong = null;
+        const container = document.getElementById("song-preset-btns");
+        container.innerHTML = "";
+        opts.forEach(n => {
+          const amount = room.song_price * n;
+          const btn = document.createElement("button");
+          btn.className = "time-opt-btn";
+          btn.innerHTML = `<span class="opt-time">${n}곡</span><span class="opt-price">${amount.toLocaleString()}원</span>`;
+          btn.onclick = () => selectSongPreset(n, btn);
+          container.appendChild(btn);
+        });
+      } else {
+        show("song-free"); hide("song-preset");
+        songCount = 1;
+        document.getElementById("song-count").textContent = 1;
+        document.querySelectorAll(".quick-btn").forEach(b => b.classList.remove("selected"));
+      }
+    }
+
+    function selectSongPreset(n, btn) {
+      selectedSong = n;
+      document.querySelectorAll("#song-preset-btns .time-opt-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      updatePayBar();
+    }
+
+    function buildTimeOptions() {
+      const room = ROOMS[selectedRoom];
+      const container = document.getElementById("time-option-btns");
+      container.innerHTML = "";
+      (room.time_options || []).forEach(min => {
+        const amount = room.time_price_per_min * min;
+        const btn = document.createElement("button");
+        btn.className = "time-opt-btn";
+        btn.innerHTML = `<span class="opt-time">${min}분</span><span class="opt-price">${amount.toLocaleString()}원</span>`;
+        btn.onclick = () => selectTime(min, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectTime(min, btn) {
+      selectedMinutes = min;
+      document.querySelectorAll("#time-option-btns .time-opt-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      updatePayBar();
+    }
+
+    function setQuickSong(n) {
+      songCount = n;
+      document.getElementById("song-count").textContent = n;
+      document.querySelectorAll(".quick-btn").forEach(b => {
+        b.classList.toggle("selected", parseInt(b.textContent) === n);
+      });
+      updatePayBar();
+    }
+
+    function adjustSong(delta) {
+      const next = Math.max(1, Math.min(99, songCount + delta));
+      songCount = next;
+      document.getElementById("song-count").textContent = next;
+      document.querySelectorAll(".quick-btn").forEach(b => b.classList.remove("selected"));
+      updatePayBar();
+    }
+
+    function updatePayBar() {
+      if (!selectedRoom) { hide("pay-bar"); return; }
+      const room = ROOMS[selectedRoom];
+      let amount = 0, detail = "";
+      if (selectedMode === "song") {
+        const isPreset = room.song_options && room.song_options.length > 0;
+        const count = isPreset ? selectedSong : songCount;
+        if (isPreset && !selectedSong) { hide("pay-bar"); return; }
+        amount = room.song_price * count;
+        detail = `${room.name} · ${count}곡`;
+        show("pay-bar");
+      } else {
+        if (!selectedMinutes) { hide("pay-bar"); return; }
+        amount = room.time_price_per_min * selectedMinutes;
+        detail = `${room.name} · ${selectedMinutes}분`;
+        show("pay-bar");
+      }
+      document.getElementById("pay-detail").textContent = detail;
+      document.getElementById("pay-amount").textContent = amount.toLocaleString() + "원";
+    }
+
+    function startPayment() {
+      const room = ROOMS[selectedRoom];
+      const isPreset = room.song_options && room.song_options.length > 0;
+      const quantity = selectedMode === "song" ? (isPreset ? selectedSong : songCount) : selectedMinutes;
+      const unit = selectedMode === "song" ? "곡" : "분";
+      const amount = selectedMode === "song" ? room.song_price * quantity : room.time_price_per_min * quantity;
+
+      document.getElementById("demo-info").innerHTML = `
+        <div class="demo-info-row"><span class="dl">방</span><span class="dv">${room.name}</span></div>
+        <div class="demo-info-row"><span class="dl">결제 방식</span><span class="dv">${selectedMode === "song" ? "곡 단위" : "시간 단위"}</span></div>
+        <div class="demo-info-row"><span class="dl">수량</span><span class="dv">${quantity}${unit}</span></div>
+        <div class="demo-info-row"><span class="dl">결제 금액</span><span class="dv">${amount.toLocaleString()}원</span></div>
+      `;
+      show("demo-overlay");
+    }
+
+    function closeDemo() { hide("demo-overlay"); }
+
+    function show(id) { document.getElementById(id).classList.remove("hidden"); }
+    function hide(id) { document.getElementById(id).classList.add("hidden"); }
+
+    init();
+  </script>
+</body>
+</html>
