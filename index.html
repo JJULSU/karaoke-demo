@@ -223,6 +223,65 @@
       padding: 13px;
       cursor: pointer;
     }
+
+    /* 사업자 정보 푸터 */
+    .biz-footer {
+      margin-top: 40px;
+      padding: 24px 16px 40px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+    .biz-footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-bottom: 16px;
+    }
+    .biz-footer-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .biz-footer-links a:hover { text-decoration: underline; }
+    .biz-divider { color: var(--border); }
+
+    /* 약관/정책 모달 */
+    .policy-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex; align-items: flex-end; justify-content: center;
+      z-index: 300;
+      padding: 0;
+    }
+    .policy-modal {
+      background: var(--surface);
+      border-radius: var(--radius) var(--radius) 0 0;
+      width: 100%; max-width: 480px;
+      max-height: 80dvh;
+      display: flex; flex-direction: column;
+    }
+    .policy-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .policy-title { font-size: 16px; font-weight: 700; }
+    .policy-close {
+      background: none; border: none; color: var(--text-muted);
+      font-size: 22px; cursor: pointer; line-height: 1;
+    }
+    .policy-body {
+      padding: 20px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.9;
+      color: var(--text-muted);
+    }
+    .policy-body h3 { color: var(--text); font-size: 13px; margin: 16px 0 6px; }
+    .policy-body p { margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -276,6 +335,26 @@
       </section>
     </main>
 
+    <!-- 사업자 정보 + 정책 링크 -->
+    <div class="biz-footer">
+      <div class="biz-footer-links">
+        <a href="#" onclick="openPolicy('terms'); return false;">이용약관</a>
+        <span class="biz-divider">|</span>
+        <a href="#" onclick="openPolicy('privacy'); return false;" style="font-weight:700; color:#c5b3ff">개인정보처리방침</a>
+        <span class="biz-divider">|</span>
+        <a href="#" onclick="openPolicy('refund'); return false;">환불정책</a>
+        <span class="biz-divider">|</span>
+        <a href="#" onclick="openPolicy('product'); return false;">서비스 안내</a>
+      </div>
+      <div>
+        상호명: ○○노래방 &nbsp;|&nbsp; 대표자: 홍길동<br>
+        사업자등록번호: 000-00-00000<br>
+        주소: 서울시 ○○구 ○○로 000<br>
+        전화: 02-000-0000 &nbsp;|&nbsp; 이메일: contact@example.com<br>
+        통신판매업 신고번호: 제 0000-서울○○-0000 호
+      </div>
+    </div>
+
     <footer class="pay-bar hidden" id="pay-bar">
       <div class="pay-info">
         <span class="pay-detail" id="pay-detail">−</span>
@@ -283,6 +362,17 @@
       </div>
       <button class="pay-button" id="pay-button" onclick="startPayment()">결제하기</button>
     </footer>
+  </div>
+
+  <!-- 약관/정책 모달 -->
+  <div class="policy-overlay hidden" id="policy-overlay" onclick="if(event.target===this)closePolicy()">
+    <div class="policy-modal">
+      <div class="policy-header">
+        <span class="policy-title" id="policy-title"></span>
+        <button class="policy-close" onclick="closePolicy()">×</button>
+      </div>
+      <div class="policy-body" id="policy-body"></div>
+    </div>
   </div>
 
   <!-- 데모 모달 -->
@@ -487,6 +577,80 @@
     }
 
     function closeDemo() { hide("demo-overlay"); }
+
+    // ─── 약관/정책 모달 ───────────────────────────────────
+    const POLICIES = {
+      terms: {
+        title: "이용약관",
+        body: `
+          <h3>제1조 (목적)</h3>
+          <p>본 약관은 ○○노래방(이하 "업체")이 제공하는 코인노래방 무인 결제 서비스(이하 "서비스") 이용에 관한 조건 및 절차, 업체와 이용자의 권리·의무 및 책임 사항을 규정함을 목적으로 합니다.</p>
+          <h3>제2조 (서비스 내용)</h3>
+          <p>본 서비스는 QR코드를 통해 노래방 이용권(곡 단위 또는 시간 단위)을 온라인으로 결제할 수 있는 무인 결제 서비스입니다.</p>
+          <h3>제3조 (이용자 의무)</h3>
+          <p>이용자는 본 서비스를 이용함에 있어 관련 법령 및 본 약관의 규정을 준수하여야 합니다. 이용자는 타인의 정보를 도용하거나 부정한 방법으로 서비스를 이용해서는 안 됩니다.</p>
+          <h3>제4조 (책임 제한)</h3>
+          <p>업체는 천재지변, 통신 장애 등 불가항력적 사유로 인한 서비스 중단에 대해 책임을 지지 않습니다.</p>
+          <h3>제5조 (약관 변경)</h3>
+          <p>업체는 필요한 경우 본 약관을 변경할 수 있으며, 변경 시 서비스 화면에 공지합니다.</p>
+        `
+      },
+      privacy: {
+        title: "개인정보처리방침",
+        body: `
+          <h3>수집하는 개인정보</h3>
+          <p>결제 처리를 위해 결제 수단 정보(카드사에서 처리, 당사 미보관), 결제 내역(방 번호, 결제 금액, 결제 시각)을 수집합니다.</p>
+          <h3>개인정보 이용 목적</h3>
+          <p>수집된 정보는 결제 처리 및 환불 처리, 분쟁 해결, 법령 의무 이행에만 사용됩니다.</p>
+          <h3>보유 및 이용 기간</h3>
+          <p>결제 내역은 전자상거래법에 따라 5년간 보관 후 파기합니다.</p>
+          <h3>제3자 제공</h3>
+          <p>이용자의 동의 없이 개인정보를 제3자에게 제공하지 않습니다. 단, 결제 처리를 위해 PG사(포트원, 토스페이먼츠)에 결제 정보가 전달됩니다.</p>
+          <h3>문의</h3>
+          <p>개인정보 관련 문의: 02-000-0000 / contact@example.com</p>
+        `
+      },
+      refund: {
+        title: "환불정책",
+        body: `
+          <h3>환불 기준</h3>
+          <p>결제 완료 후 노래방 입장 전(서비스 미이용 상태)에는 전액 환불이 가능합니다.</p>
+          <p>서비스 이용 시작 후에는 환불이 불가합니다.</p>
+          <h3>환불 방법</h3>
+          <p>환불 요청은 매장 직원에게 문의하거나 아래 연락처로 요청해 주세요.</p>
+          <p>전화: 02-000-0000<br>운영 시간: 매일 12:00 ~ 24:00</p>
+          <h3>환불 처리 기간</h3>
+          <p>환불 승인 후 카드사 영업일 기준 3~5일 이내 취소 처리됩니다.</p>
+          <h3>결제 오류 환불</h3>
+          <p>결제는 완료됐으나 서비스가 정상 제공되지 않은 경우 즉시 전액 환불합니다.</p>
+        `
+      },
+      product: {
+        title: "서비스 안내",
+        body: `
+          <h3>서비스 종류</h3>
+          <p><b>곡 단위 결제</b>: 1곡당 500원, 원하는 곡 수만큼 선택하여 결제</p>
+          <p><b>시간 단위 결제</b>: 10분 1,250원 / 20분 2,500원 / 30분 3,750원 / 60분 7,500원</p>
+          <h3>이용 방법</h3>
+          <p>1. QR코드 스캔 → 방 번호 선택<br>
+             2. 결제 방식(곡/시간) 및 수량 선택<br>
+             3. 카드 결제 완료<br>
+             4. 자동으로 해당 방 반주기에 충전됨</p>
+          <h3>운영 시간</h3>
+          <p>매일 12:00 ~ 익일 06:00</p>
+          <h3>문의</h3>
+          <p>전화: 02-000-0000</p>
+        `
+      }
+    };
+
+    function openPolicy(key) {
+      const p = POLICIES[key];
+      document.getElementById("policy-title").textContent = p.title;
+      document.getElementById("policy-body").innerHTML = p.body;
+      show("policy-overlay");
+    }
+    function closePolicy() { hide("policy-overlay"); }
 
     function show(id) { document.getElementById(id).classList.remove("hidden"); }
     function hide(id) { document.getElementById(id).classList.add("hidden"); }
